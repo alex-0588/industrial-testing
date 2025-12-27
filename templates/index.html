@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工业零件缺陷检测系统 - 学生项目</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <header class="header">
+            <div class="logo">
+                <i class="fas fa-robot"></i>
+                <div class="logo-text">
+                    <h1>工业零件缺陷检测系统</h1>
+                    <p>基于深度学习的智能检测平台 - 学生课程项目</p>
+                </div>
+            </div>
+            <div class="status">
+                <span id="systemStatus" class="status-indicator">
+                    <i class="fas fa-circle"></i> 系统状态: 检查中...
+                </span>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <!-- 左侧：上传区域 -->
+            <div class="upload-section">
+                <h2><i class="fas fa-cloud-upload-alt"></i> 上传检测图片</h2>
+                
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">
+                        <i class="fas fa-file-upload"></i>
+                    </div>
+                    <div class="upload-text">
+                        <h3>点击或拖拽上传图片</h3>
+                        <p>支持格式: JPG, PNG, BMP</p>
+                        <p>建议尺寸: 200×200 像素以上</p>
+                    </div>
+                    <input type="file" id="fileInput" accept="image/*" hidden>
+                </div>
+                
+                <div class="file-list" id="fileList">
+                    <!-- 文件列表会动态显示在这里 -->
+                </div>
+                
+                <div class="controls">
+                    <button id="detectBtn" class="btn btn-primary" disabled>
+                        <i class="fas fa-search"></i> 开始检测
+                    </button>
+                    <button id="clearBtn" class="btn btn-secondary">
+                        <i class="fas fa-trash"></i> 清空列表
+                    </button>
+                    <button id="testBtn" class="btn btn-info">
+                        <i class="fas fa-vial"></i> 使用测试图片
+                    </button>
+                </div>
+                
+                <!-- 测试图片选择 -->
+                <div class="test-images" id="testImages" style="display: none;">
+                    <h4><i class="fas fa-images"></i> 选择测试图片:</h4>
+                    <div class="test-images-grid" id="testImagesGrid">
+                        <!-- 测试图片会动态加载 -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧：结果显示 -->
+            <div class="result-section">
+                <div class="result-header">
+                    <h2><i class="fas fa-chart-bar"></i> 检测结果</h2>
+                    <div class="result-status" id="resultStatus">
+                        <span class="status-pending">等待检测</span>
+                    </div>
+                </div>
+                
+                <!-- 图像预览 -->
+                <div class="image-preview" id="imagePreview" style="display: none;">
+                    <img id="previewImage" src="" alt="预览图片">
+                    <div class="image-info" id="imageInfo"></div>
+                </div>
+                
+                <!-- 检测结果 -->
+                <div class="detection-result" id="detectionResult" style="display: none;">
+                    <div class="result-card">
+                        <div class="result-header-card">
+                            <div class="defect-icon" id="defectIcon">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <div class="defect-info">
+                                <h3 id="defectType">未知缺陷</h3>
+                                <div class="confidence">
+                                    置信度: <span id="confidenceValue">0.00</span>%
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="confidence-bars" id="confidenceBars">
+                            <!-- 置信度条会动态生成 -->
+                        </div>
+                        
+                        <div class="result-details">
+                            <div class="detail-item">
+                                <i class="fas fa-clock"></i>
+                                <span>处理时间: <span id="processingTime">0</span>ms</span>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-calendar"></i>
+                                <span>检测时间: <span id="detectionTime">-</span></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 批量结果 -->
+                <div class="batch-result" id="batchResult" style="display: none;">
+                    <h3><i class="fas fa-tasks"></i> 批量检测结果</h3>
+                    <div class="batch-table">
+                        <table id="batchTable">
+                            <thead>
+                                <tr>
+                                    <th>文件名</th>
+                                    <th>缺陷类型</th>
+                                    <th>置信度</th>
+                                    <th>状态</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- 批量结果会动态添加 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- 空状态 -->
+                <div class="empty-state" id="emptyState">
+                    <i class="fas fa-search"></i>
+                    <h3>暂无检测结果</h3>
+                    <p>请上传图片并开始检测</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 底部：系统信息和API文档 -->
+        <footer class="footer">
+            <div class="footer-content">
+                <div class="api-info">
+                    <h4><i class="fas fa-code"></i> API接口</h4>
+                    <ul>
+                        <li><strong>POST /api/detect</strong> - 单张图片检测</li>
+                        <li><strong>POST /api/batch/detect</strong> - 批量检测</li>
+                        <li><strong>GET /api/health</strong> - 系统状态检查</li>
+                        <li><strong>GET /api/stats</strong> - 系统统计信息</li>
+                    </ul>
+                </div>
+                <div class="project-info">
+                    <h4><i class="fas fa-info-circle"></i> 项目信息</h4>
+                    <p>这是一个学生课程项目，用于演示基于CNN的工业缺陷检测。</p>
+                    <p class="disclaimer">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        免责声明: 本项目仅用于学术研究，检测结果仅供参考。
+                    </p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2024 人工智能课程项目 | 计算机科学与技术专业</p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- JavaScript文件 -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
